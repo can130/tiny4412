@@ -38,7 +38,8 @@ struct sTime {  //日期时间结构体定义
     unsigned char week;  //星期
 };
 
-  
+
+
 unsigned int *Ds1302_con = NULL;  
 unsigned int *Ds1302_dat = NULL;  
   
@@ -226,9 +227,22 @@ static long tiny4412_ds1302_ioctl(struct file *file, unsigned int cmd,
 static int ds1302_read(struct file *filp, char __user *buff, size_t count, loff_t *offp)
 {
      unsigned long err; 
-        char get[10]="hello can";
-        err=copy_to_user((void *)buff, (const void *)(get), min(sizeof(get), count));
-        return err ? -EFAULT : min(sizeof(get), count);
+     unsigned char buf[8];
+	
+	 struct sTime time;
+
+     DS1302BurstRead(buf);
+     time.year = buf[6] + 0x2000;
+     time.mon  = buf[4];
+     time.day  = buf[3];
+     time.hour = buf[2];
+     time.min  = buf[1];
+     time.sec  = buf[0];
+     time.week = buf[5];
+	 
+	 
+	 	err=copy_to_user((void *)buff, (const void *)(&time), min(sizeof(time), count));
+        return err ? -EFAULT : min(sizeof(time), count);
 }
   
 static const struct file_operations tiny4412_ds1302_fops = {  
