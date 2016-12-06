@@ -1,0 +1,1 @@
+cmd_/home/can/git/tiny4412/ds1302/ds1302.ko := arm-linux-ld -EL -r  -T /home/can/tiny4412/linux-3.8/scripts/module-common.lds --build-id  -o /home/can/git/tiny4412/ds1302/ds1302.ko /home/can/git/tiny4412/ds1302/ds1302.o /home/can/git/tiny4412/ds1302/ds1302.mod.o

@@ -1,0 +1,1 @@
+cmd_/home/can/git/tiny4412/led_driver/led.ko := arm-linux-ld -EL -r  -T /home/can/linux/4412/linux-3.8/scripts/module-common.lds --build-id  -o /home/can/git/tiny4412/led_driver/led.ko /home/can/git/tiny4412/led_driver/led.o /home/can/git/tiny4412/led_driver/led.mod.o
