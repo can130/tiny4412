@@ -29,7 +29,7 @@ int main (int argc, char *argv[])
         return 0;  
     }   
   
-    read(leds_fd,buf,10,)  
+    read(leds_fd,buf,10);  
 	printf("%s\n",buf);
   
     close(leds_fd);  

@@ -5,7 +5,8 @@
 #include <linux/fs.h>  
 #include <linux/ioctl.h>  
 #include <linux/miscdevice.h>  
-  
+#include <asm/uaccess.h>
+
 #define DEVICE_NAME     "tiny4412-ds1302"  
   
   
@@ -73,7 +74,7 @@ static int ds1302_dat_read()
     return (temp&(0x1<<DS1302_DAT));
 }
 
-static void ds1302_write(unsigned int pin,unsigned int state)
+static void ds1302_write(unsigned int pin,unsigned int status)
 {
 	unsigned int temp;  
       
@@ -84,7 +85,7 @@ static void ds1302_write(unsigned int pin,unsigned int state)
     else  
         temp |= 0x1<<pin;  
       
-    writel(temp, gpm4_dat); 
+    writel(temp, Ds1302_dat); 
 }
   
   
@@ -150,26 +151,6 @@ unsigned char DS1302SingleRead(unsigned char reg)
     
     return dat;
 }
-/* 用单次写操作向某一寄存器写入一个字节，reg-寄存器地址，dat-待写入字节 */
-void DS1302SingleWrite(unsigned char reg, unsigned char dat)
-{
-    ds1302_write(DS1302_RST,1);//DS1302_CE = 1;                      //使能片选信号
-    DS1302ByteWrite((reg<<1)|0x80);  //发送写寄存器指令
-    DS1302ByteWrite(dat);              //写入字节数据
-    ds1302_write(DS1302_RST,0);//DS1302_CE = 0;                      //除能片选信号
-}
-/* 用单次读操作从某一寄存器读取一个字节，reg-寄存器地址，返回值-读到的字节 */
-unsigned char DS1302SingleRead(unsigned char reg)
-{
-    unsigned char dat;
-    
-    ds1302_write(DS1302_RST,1);//DS1302_CE = 1;                      //使能片选信号
-    DS1302ByteWrite((reg<<1)|0x81);  //发送读寄存器指令
-    dat = DS1302ByteRead();           //读取字节数据
-    ds1302_write(DS1302_RST,0);//DS1302_CE = 0;                      //除能片选信号
-    
-    return dat;
-}
 /* 用突发模式连续写入8个寄存器数据，dat-待写入数据指针 */
 void DS1302BurstWrite(unsigned char *dat)
 {
@@ -215,7 +196,7 @@ static void SetRealTime(struct sTime *time)
 static void InitDS1302()
 {
     unsigned char dat;
-    struct sTime code InitTime[] = {  //2013年10月8日 12:30:00 星期二
+    struct sTime InitTime[] = {  //2013年10月8日 12:30:00 星期二
         0x2013,0x10,0x08, 0x12,0x30,0x00, 0x02
     };
     
@@ -260,7 +241,7 @@ static const struct file_operations tiny4412_ds1302_fops = {
 static struct miscdevice tiny4412_ds1302_miscdev = {  
     .minor = MISC_DYNAMIC_MINOR,  
     .name = DEVICE_NAME,  
-    .fops = &tiny4412_leds_fops,  
+    .fops = &tiny4412_ds1302_fops,   
 };  
   
 
@@ -279,11 +260,11 @@ static int tiny4412_ds1302_init(void)
       
     /* 将GPM4[0]-GPM4[3]设置为输出 */  
     data = readl(Ds1302_con);    
-    data &= ~((0xf<<8)|(0xf<<12)|(0xf<<16);   //gpx3.234  
-    data |=  ((0x1<<8)|(0x1<<12)|(0x1<<16);   
+    data &= ~((0xf<<8)|(0xf<<12)|(0xf<<16));   //gpx3.234  
+    data |=  (0x1<<8)|(0x1<<12)|(0x1<<16);   
     writel(data, Ds1302_con);   
   
-    ret = misc_register(&tiny4412_leds_miscdev);  //注册混杂设备驱动  
+    ret = misc_register(&tiny4412_ds1302_miscdev);  //注册混杂设备驱动  
     if (ret) {  
         printk("misc_register faild!\n");  
         goto error2;  
@@ -310,7 +291,7 @@ static void tiny4412_ds1302_exit(void)
 {  
     unsigned int data;  
   
-    misc_deregister(&tiny4412_leds_miscdev);  
+    misc_deregister(&tiny4412_ds1302_miscdev);  
       
     data = readl(Ds1302_dat);  
     data |=  (0x1<<3)|(0x1<<2)|(0x1<<1)|(0x1<<0);   
