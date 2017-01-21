@@ -149,7 +149,7 @@ static void tiny4412_leds_exit(void)
   
   
 MODULE_LICENSE("GPL");  
-MODULE_AUTHOR("Chen Jinpeng");  
+MODULE_AUTHOR("ChuncanL");  
   
   
 module_init(tiny4412_leds_init);  
